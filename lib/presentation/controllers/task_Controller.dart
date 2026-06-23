@@ -4,13 +4,14 @@ import 'package:get/get.dart';
 
 import '../../domain/entities/task.dart';
 import '../../domain/usecases/task_usecases.dart';
+import '../../core/values/AppStrings.dart';
 
 class TaskController extends GetxController {
   final TaskUseCases taskUseCases;
   TaskController(this.taskUseCases);
 
   RxString errorMessage = ''.obs;
-  RxString status = 'All'.obs;
+  RxString status = AppStrings.statusAll.obs;
   RxBool isLoading = false.obs;
   RxList<Task> tasksStatus = <Task>[].obs;
 
@@ -30,9 +31,9 @@ class TaskController extends GetxController {
       errorMessage.value = '';
       isLoading.value = true;
       final result = taskUseCases.getTasks();
-      if (status.value == 'All') {
+      if (status.value == AppStrings.statusAll) {
         tasksStatus.assignAll(result);
-      } else if (status.value == 'Completed') {
+      } else if (status.value == AppStrings.statusCompleted) {
         tasksStatus.assignAll(result.where((task) => task.isCompleted));
       } else {
         tasksStatus.assignAll(result.where((task) => !task.isCompleted));

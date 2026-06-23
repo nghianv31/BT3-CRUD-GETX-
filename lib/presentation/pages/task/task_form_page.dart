@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../domain/entities/task.dart';
 import '../../controllers/task_Controller.dart';
+import '../../../core/values/AppStrings.dart';
 
 class TaskFormPage extends StatefulWidget {
   const TaskFormPage({super.key});
@@ -60,32 +61,7 @@ class _TaskFormPageState extends State<TaskFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Custom Back Button and Title
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white70,
-                      ),
-                      onPressed: () => Get.back(),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isEditMode ? 'Chỉnh sửa công việc' : 'Tạo công việc mới',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Form Content
+              _buildHeader(),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
@@ -97,97 +73,136 @@ class _TaskFormPageState extends State<TaskFormPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title Field Card
-                        _buildInputFieldLabel('Tiêu đề công việc'),
-                        const SizedBox(height: 8),
-                        _buildTextFormField(
-                          controller: _titleController,
-                          hintText: 'Nhập tiêu đề...',
-                          maxLines: 1,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Tiêu đề không được để trống';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildTitleField(),
                         const SizedBox(height: 24),
-
-                        // Description Field Card
-                        _buildInputFieldLabel('Mô tả chi tiết'),
-                        const SizedBox(height: 8),
-                        _buildTextFormField(
-                          controller: _descriptionController,
-                          hintText: 'Nhập mô tả chi tiết của công việc...',
-                          maxLines: 5,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Mô tả không được để trống';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildDescriptionField(),
                         const SizedBox(height: 48),
-
-                        // Save Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF00F2FE), // Teal
-                                  Color(0xFF4FACFE), // Blue
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF00F2FE,
-                                  ).withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onPressed: _saveForm,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.save_rounded,
-                                    color: Colors.black87,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _isEditMode
-                                        ? 'LƯU THAY ĐỔI'
-                                        : 'TẠO CÔNG VIỆC',
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.0,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        _buildSaveButton(),
                       ],
                     ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white70,
+            ),
+            onPressed: () => Get.back(),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _isEditMode ? AppStrings.editTask : AppStrings.newTask,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInputFieldLabel(AppStrings.taskTitle),
+        const SizedBox(height: 8),
+        _buildTextFormField(
+          controller: _titleController,
+          hintText: AppStrings.taskTitleHint,
+          maxLines: 1,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return AppStrings.taskTitleEmpty;
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInputFieldLabel(AppStrings.taskDescription),
+        const SizedBox(height: 8),
+        _buildTextFormField(
+          controller: _descriptionController,
+          hintText: AppStrings.taskDescriptionHint,
+          maxLines: 5,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return AppStrings.taskDescriptionEmpty;
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF00F2FE), // Teal
+              Color(0xFF4FACFE), // Blue
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00F2FE).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: _saveForm,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.save_rounded,
+                color: Colors.black87,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _isEditMode ? AppStrings.saveChanges : AppStrings.createTask,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
@@ -269,13 +284,13 @@ class _TaskFormPageState extends State<TaskFormPage> {
       }
 
       final message = _isEditMode
-          ? 'Đã cập nhật công việc "$title" (Mock)'
-          : 'Đã tạo công việc mới "$title" (Mock)';
+          ? AppStrings.taskUpdatedMock(title)
+          : AppStrings.taskCreatedMock(title);
 
       Get.back();
 
       Get.snackbar(
-        'Thành công',
+        AppStrings.success,
         message,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFF2C5364).withOpacity(0.9),
