@@ -1,11 +1,10 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../../domain/entities/task.dart';
-import '../../controllers/task_Controller.dart';
 import '../../../core/values/AppStrings.dart';
+import '../../controllers/task_controller.dart';
+import '../../widgets/filter_chip_widget.dart';
+import '../../widgets/task_card_widget.dart';
 
 class TaskListPage extends StatefulWidget {
   const TaskListPage({super.key});
@@ -15,423 +14,404 @@ class TaskListPage extends StatefulWidget {
 }
 
 class _TaskListPageState extends State<TaskListPage> {
-  // Dữ liệu Mock tạm thời (Chưa áp dụng state management của GetX hoặc Hive thực tế)
   final TaskController taskController = Get.find<TaskController>();
-  final String _filterStatus = 'All';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      taskController.setSearchQuery(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F2027), // Deep Obsidian Blue
-              Color(0xFF203A43),
-              Color(0xFF2C5364),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildFilterChipsSection(),
-              const SizedBox(height: 8),
-              _buildTaskList(),
-            ],
-          ),
-        ),
+      backgroundColor: const Color(0xFFF3F5F9),
+      body: CustomScrollView(
+        slivers: [
+          _buildAppBar(),
+          _buildSearchBarAndFilterSection(),
+          _buildTaskListSection(),
+        ],
       ),
       floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 180.0,
+      floating: false,
+      pinned: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.sort_rounded, color: Colors.white),
+          onPressed: () => _showSortBottomSheet(context),
+        ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+        title: const Text(
+          AppStrings.taskManagement,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+            fontSize: 24,
+          ),
+        ),
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
             children: [
-              Text(
-                AppStrings.taskManagement,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+              Positioned(
+                right: -30,
+                top: -30,
+                child: CircleAvatar(
+                  radius: 80,
+                  backgroundColor: Colors.white.withOpacity(0.1),
                 ),
               ),
-              const SizedBox(height: 4),
-              Obx(
-                () => Text(
-                  AppStrings.taskCount(taskController.tasksStatus.length),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 14,
-                  ),
+              Positioned(
+                left: -20,
+                bottom: 40,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white.withOpacity(0.05),
                 ),
               ),
             ],
           ),
-          // Counter Quick Shortcut Button
-          IconButton(
-            icon: const Icon(
-              Icons.bolt,
-              color: Colors.amberAccent,
-              size: 28,
-            ),
-            onPressed: () => Get.toNamed('/counter'),
-            tooltip: AppStrings.viewCounterScreen,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBarAndFilterSection() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSearchField(),
+            const SizedBox(height: 16.0),
+            _buildStatusFilter(),
+            const SizedBox(height: 16.0),
+            _buildPriorityFilter(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFilterChipsSection() {
-    return Obx(
-      () => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24.0,
-          vertical: 8.0,
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildFilterChip(AppStrings.statusAllVi, AppStrings.statusAll),
-              const SizedBox(width: 12),
-              _buildFilterChip(AppStrings.statusUncompletedVi, AppStrings.statusUncompleted),
-              const SizedBox(width: 12),
-              _buildFilterChip(AppStrings.statusCompletedVi, AppStrings.statusCompleted),
-            ],
-          ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Tìm kiếm công việc...',
+          hintStyle: TextStyle(color: Colors.grey.shade400),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF2575FC)),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
         ),
       ),
     );
   }
 
-  Widget _buildTaskList() {
-    return Expanded(
-      child: Obx(() {
-        if (taskController.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF00F2FE),
+  Widget _buildStatusFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Trạng thái',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF333333),
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        Obx(() {
+          return Row(
+            children: [
+              FilterChipWidget(
+                value: AppStrings.statusAll,
+                selectedValue: taskController.status.value,
+                onSelected: (val) => taskController.changeStatus(val),
+                displayName: AppStrings.statusAllVi,
+              ),
+              const SizedBox(width: 8.0),
+              FilterChipWidget(
+                value: AppStrings.statusCompleted,
+                selectedValue: taskController.status.value,
+                onSelected: (val) => taskController.changeStatus(val),
+                displayName: AppStrings.statusCompletedVi,
+              ),
+              const SizedBox(width: 8.0),
+              FilterChipWidget(
+                value: AppStrings.statusUncompleted,
+                selectedValue: taskController.status.value,
+                onSelected: (val) => taskController.changeStatus(val),
+                displayName: AppStrings.statusUncompletedVi,
+              ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildPriorityFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Mức độ ưu tiên',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        Obx(() {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                FilterChipWidget(
+                  value: 'All',
+                  selectedValue: taskController.priorityFilter.value,
+                  onSelected: (val) => taskController.setPriorityFilter(val),
+                  displayName: 'Tất cả',
+                  prefixColor: Colors.grey,
+                ),
+                const SizedBox(width: 8.0),
+                FilterChipWidget(
+                  value: 'High',
+                  selectedValue: taskController.priorityFilter.value,
+                  onSelected: (val) => taskController.setPriorityFilter(val),
+                  displayName: 'Cao',
+                  prefixColor: Colors.redAccent,
+                ),
+                const SizedBox(width: 8.0),
+                FilterChipWidget(
+                  value: 'Medium',
+                  selectedValue: taskController.priorityFilter.value,
+                  onSelected: (val) => taskController.setPriorityFilter(val),
+                  displayName: 'Trung bình',
+                  prefixColor: Colors.amber,
+                ),
+                const SizedBox(width: 8.0),
+                FilterChipWidget(
+                  value: 'Low',
+                  selectedValue: taskController.priorityFilter.value,
+                  onSelected: (val) => taskController.setPriorityFilter(val),
+                  displayName: 'Thấp',
+                  prefixColor: Colors.green,
+                ),
+              ],
             ),
           );
-        }
+        }),
+      ],
+    );
+  }
 
-        if (taskController.errorMessage.value.isNotEmpty) {
-          return Center(
+  Widget _buildTaskListSection() {
+    return Obx(() {
+      if (taskController.isLoading.value) {
+        return const SliverFillRemaining(
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2575FC)),
+            ),
+          ),
+        );
+      }
+
+      if (taskController.errorMessage.value.isNotEmpty) {
+        return SliverFillRemaining(
+          child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Text(
                 taskController.errorMessage.value,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(color: Colors.redAccent, fontSize: 16),
               ),
             ),
-          );
-        }
-
-        if (taskController.tasksStatus.isEmpty) {
-          return Center(
-            child: Text(
-              AppStrings.noTasks,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 16,
-              ),
-            ),
-          );
-        }
-
-        // Lọc danh sách theo trạng thái
-        final filteredTasks = taskController.tasksStatus.where((task) {
-          if (_filterStatus == AppStrings.statusCompleted) return task.isCompleted;
-          if (_filterStatus == AppStrings.statusUncompleted) return !task.isCompleted;
-          return true;
-        }).toList();
-
-        if (filteredTasks.isEmpty) {
-          return Center(
-            child: Text(
-              AppStrings.noTasksMatchFilter,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 16,
-              ),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0),
-          itemCount: filteredTasks.length,
-          itemBuilder: (context, index) {
-            final task = filteredTasks[index];
-            return _buildTaskCard(task);
-          },
+          ),
         );
-      }),
-    );
+      }
+
+      final tasks = taskController.tasksStatus;
+
+      if (tasks.isEmpty) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.task_alt,
+                  size: 80,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Không tìm thấy công việc nào',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Thử tạo mới công việc hoặc thay đổi bộ lọc tìm kiếm của bạn.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black38,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      return SliverPadding(
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 80.0),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final task = tasks[index];
+              return TaskCardWidget(task: task);
+            },
+            childCount: tasks.length,
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
+    return FloatingActionButton.extended(
       onPressed: () => Get.toNamed(AppRoutes.taskForm),
-      backgroundColor: const Color(0xFF00F2FE), // Bright Teal
-      foregroundColor: Colors.black87,
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: const Icon(Icons.add_rounded, size: 30),
+      label: const Text('Thêm công việc', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      icon: const Icon(Icons.add, color: Colors.white),
+      backgroundColor: const Color(0xFF2575FC),
     );
   }
 
-  Widget _buildTaskCard(Task task) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.0),
+  void _showSortBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              // Status Indicator Bar
-              Container(
-                width: 6,
-                color: task.isCompleted
-                    ? const Color(0xFF00F2FE)
-                    : Colors.amberAccent,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(18.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Custom Checkbox UI
-                          GestureDetector(
-                            onTap: () async {
-                              await taskController.updateTask(
-                                task.copyWith(isCompleted: !task.isCompleted),
-                              );
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.only(
-                                right: 12.0,
-                                top: 2.0,
-                              ),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: task.isCompleted
-                                    ? const Color(0xFF00F2FE)
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: task.isCompleted
-                                      ? const Color(0xFF00F2FE)
-                                      : Colors.white54,
-                                  width: 2.0,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: task.isCompleted
-                                  ? const Icon(
-                                      Icons.check_rounded,
-                                      size: 14,
-                                      color: Colors.black87,
-                                    )
-                                  : null,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              task.title,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                decoration: task.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                decorationColor: Colors.white54,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 32.0),
-                        child: Text(
-                          task.description,
+      builder: (context) {
+        return Obx(() {
+          final currentSortBy = taskController.sortBy.value;
+          final currentSortAscending = taskController.sortAscending.value;
+
+          final options = [
+            {'label': 'Ngày tạo (Mới nhất)', 'sortBy': 'CreatedAt', 'ascending': false},
+            {'label': 'Ngày tạo (Cũ nhất)', 'sortBy': 'CreatedAt', 'ascending': true},
+            {'label': 'Ngày hết hạn (Gần nhất)', 'sortBy': 'DueDate', 'ascending': true},
+            {'label': 'Ngày hết hạn (Xa nhất)', 'sortBy': 'DueDate', 'ascending': false},
+            {'label': 'Mức độ ưu tiên (Cao -> Thấp)', 'sortBy': 'Priority', 'ascending': false},
+            {'label': 'Mức độ ưu tiên (Thấp -> Cao)', 'sortBy': 'Priority', 'ascending': true},
+            {'label': 'Tiêu đề (A -> Z)', 'sortBy': 'Title', 'ascending': true},
+            {'label': 'Tiêu đề (Z -> A)', 'sortBy': 'Title', 'ascending': false},
+          ];
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Sắp xếp công việc',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final opt = options[index];
+                      final isSelected = currentSortBy == opt['sortBy'] &&
+                          currentSortAscending == opt['ascending'];
+
+                      return ListTile(
+                        title: Text(
+                          opt['label'] as String,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 14,
-                            height: 1.3,
+                            color: isSelected ? const Color(0xFF2575FC) : Colors.black87,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 32.0),
-                            child: Text(
-                              _formatDate(task.createdAt),
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.4),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              // Edit Button
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  color: Colors.white70,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  // Chuyển sang form chỉnh sửa, truyền dữ liệu Task hiện tại
-                                  Get.toNamed(
-                                    AppRoutes.taskForm,
-                                    arguments: task,
-                                  );
-                                },
-                              ),
-                              // Delete Button
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.redAccent,
-                                  size: 20,
-                                ),
-                                onPressed: () => _showDeleteConfirmDialog(task),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                        trailing: isSelected
+                            ? const Icon(Icons.check_rounded, color: Color(0xFF2575FC))
+                            : null,
+                        onTap: () {
+                          taskController.setSortBy(
+                            opt['sortBy'] as String,
+                            opt['ascending'] as bool,
+                          );
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmDialog(Task task) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF203A43),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Colors.white10),
-          ),
-          title: const Text(
-            AppStrings.confirmDelete,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            AppStrings.confirmDeleteTask(task.title),
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              child: const Text(AppStrings.cancel, style: TextStyle(color: Colors.white54)),
-              onPressed: () => Navigator.of(context).pop(),
+              ],
             ),
-            TextButton(
-              child: const Text(
-                AppStrings.delete,
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onPressed: () async {
-                await taskController.deleteTask(task.id);
-                Navigator.of(context).pop();
-                Get.snackbar(
-                  AppStrings.success,
-                  AppStrings.taskDeleted(task.title),
-                  backgroundColor: Colors.greenAccent,
-                  borderRadius: 12,
-                  icon: const Icon(
-                    Icons.check_circle_outline,
-                    color: Color(0xFF00F2FE),
-                  ),
-                );
-              },
-            ),
-          ],
-        );
+          );
+        });
       },
     );
-  }
-
-  Widget _buildFilterChip(String label, String statusValue) {
-    final isSelected = taskController.status.value == statusValue;
-    return GestureDetector(
-      onTap: () {
-        taskController.changeStatus(statusValue);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF00F2FE)
-              : Colors.white.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF00F2FE)
-                : Colors.white.withOpacity(0.1),
-            width: 1.0,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.black87 : Colors.white.withOpacity(0.8),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime dateTime) {
-    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')} - ${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 }

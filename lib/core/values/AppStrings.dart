@@ -35,6 +35,11 @@ class AppStrings {
   static const String taskDescriptionEmpty = 'Mô tả không được để trống';
   static const String saveChanges = 'LƯU THAY ĐỔI';
   static const String createTask = 'TẠO CÔNG VIỆC';
+  static const String dueDate = 'Hạn hoàn thành';
+  static const String priority = 'Mức độ ưu tiên';
+  static const String priorityHigh = 'High';
+  static const String priorityMedium = 'Medium';
+  static const String priorityLow = 'Low';
 
   static String taskUpdatedMock(String title) => 'Đã cập nhật công việc "$title" (Mock)';
   static String taskCreatedMock(String title) => 'Đã tạo công việc mới "$title" (Mock)';

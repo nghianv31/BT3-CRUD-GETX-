@@ -50,7 +50,7 @@ void main() {
     expect(find.text('Tạo công việc mới'), findsOneWidget);
 
     // Tìm nút quay lại và nhấn vào để quay về danh sách
-    final backButtonFinder = find.byIcon(Icons.arrow_back_ios_new_rounded);
+    final backButtonFinder = find.byType(BackButton);
     expect(backButtonFinder, findsOneWidget);
     await tester.tap(backButtonFinder);
     

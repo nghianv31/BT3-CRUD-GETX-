@@ -5,6 +5,8 @@ class Task {
   final String title;
   final String description;
   final bool isCompleted;
+  final String priority; // 'Low', 'Medium', 'High'
+  final DateTime dueDate;
   final DateTime createdAt;
 
   const Task({
@@ -12,6 +14,8 @@ class Task {
     required this.title,
     required this.description,
     this.isCompleted = false,
+    required this.priority,
+    required this.dueDate,
     required this.createdAt,
   });
 
@@ -20,6 +24,8 @@ class Task {
     String? title,
     String? description,
     bool? isCompleted,
+    String? priority,
+    DateTime? dueDate,
     DateTime? createdAt,
   }) {
     return Task(
@@ -27,6 +33,8 @@ class Task {
       title: title ?? this.title,
       description: description ?? this.description,
       isCompleted: isCompleted ?? this.isCompleted,
+      priority: priority ?? this.priority,
+      dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -37,6 +45,8 @@ class Task {
       title: model.title,
       description: model.description,
       isCompleted: model.isCompleted,
+      priority: model.priority,
+      dueDate: model.dueDate,
       createdAt: model.createdAt,
     );
   }
@@ -47,6 +57,8 @@ class Task {
       'title': title,
       'description': description,
       'isCompleted': isCompleted,
+      'priority': priority,
+      'dueDate': dueDate,
       'createdAt': createdAt,
     };
   }

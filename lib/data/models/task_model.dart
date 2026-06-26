@@ -25,17 +25,29 @@ class TaskModel extends Task {
   @override
   final DateTime createdAt;
 
+  @HiveField(5)
+  @override
+  final String priority;
+
+  @HiveField(6)
+  @override
+  final DateTime dueDate;
+
   const TaskModel({
     required this.id,
     required this.title,
     required this.description,
     this.isCompleted = false,
+    required this.priority,
+    required this.dueDate,
     required this.createdAt,
   }) : super(
          id: id,
          title: title,
          description: description,
          isCompleted: isCompleted,
+         priority: priority,
+         dueDate: dueDate,
          createdAt: createdAt,
        );
 
@@ -45,6 +57,8 @@ class TaskModel extends Task {
       title: entity.title,
       description: entity.description,
       isCompleted: entity.isCompleted,
+      priority: entity.priority,
+      dueDate: entity.dueDate,
       createdAt: entity.createdAt,
     );
   }

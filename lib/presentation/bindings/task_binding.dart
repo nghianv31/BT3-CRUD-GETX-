@@ -4,7 +4,7 @@ import '../../domain/repositories/task_repository.dart';
 import '../../data/providers/hive_task.dart';
 import '../../data/repositories/task_repository_impl.dart';
 import '../../domain/usecases/task_usecases.dart';
-import '../controllers/task_Controller.dart';
+import '../controllers/task_controller.dart';
 
 class TaskBinding extends Bindings {
   @override

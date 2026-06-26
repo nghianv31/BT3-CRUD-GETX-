@@ -28,11 +28,12 @@ class MyApp extends StatelessWidget {
       title: 'Flutter GetX Clean Architecture',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6A11CB),
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF2575FC),
+          primary: const Color(0xFF2575FC),
+          secondary: const Color(0xFF6A11CB),
         ),
+        useMaterial3: true,
       ),
       initialRoute: AppPages.initial,
       getPages: AppPages.routes,
