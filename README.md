@@ -2,9 +2,9 @@
 
 Dự án này là một ứng dụng quản lý công việc (Task CRUD) được xây dựng trên nền tảng Flutter. Dự án áp dụng mô hình **Clean Architecture** (phân lớp chặt chẽ) kết hợp với **GetX** (State Management & Routing) và **Hive** (Cơ sở dữ liệu cục bộ NoSQL).
 
-## Demo 
+## Demo
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/9cbb279e-8226-41c2-947f-fb01a2af2150" width="400" controls></video>
+  <video src="https://github.com/user-attachments/assets/09372848-f3f3-4df7-8387-847040b220c8" width="400" controls></video>
 </p>
 ---
 
